@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql" // 可以更改为 sqlite 等
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id        Int     @id @default(autoincrement())
+  uname     String  @unique
+  password  String
+  role      String?
+  del       Int?
+  sessions  Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    Int
+  user      Users     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
