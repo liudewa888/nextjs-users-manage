@@ -1,9 +1,10 @@
-import { Providers } from './providers';
-import { SessionProvider } from 'next-auth/react';
+import { Providers } from "./providers";
+import { SessionProvider } from "next-auth/react";
+import "./globals.css";
 
 export const metadata = {
-  title: 'User Management System',
-  description: 'Manage users, sessions and permissions',
+  title: "User Management System",
+  description: "Manage users, sessions and permissions",
 };
 
 export default function RootLayout({
@@ -16,10 +17,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Providers session={session}>
-          {children}
-        </Providers>
+        <div className="w-screen max-w-[1200px] flex justify-center m-auto">
+          <Providers session={session}>{children}</Providers>
+        </div>
       </body>
     </html>
   );
-}  
+}

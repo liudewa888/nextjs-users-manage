@@ -13,6 +13,7 @@ export const authOptions = {
       credentials: {
         uname: { label: "用户名", type: "text" },
         password: { label: "密码", type: "password" },
+        
       },
       async authorize(credentials) {
         const user = await prisma.Users.findUnique({
