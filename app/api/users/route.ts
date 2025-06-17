@@ -20,8 +20,15 @@ export async function POST(request: NextRequest) {
   if (!isAdmin) {
     return NextResponse.json({ error: "Permission denied" }, { status: 403 });
   }
-
   const { uname, password, role } = await request.json();
+
+  const user = await prisma.Users.findFirst({
+    where: { uname },
+  });
+
+  if (user) {
+    return NextResponse.json({ msg: "用户已存在" }, { status: 403 });
+  }
 
   // 生成盐值并哈希密码
   const salt = await bcrypt.genSalt(4); // 盐值复杂度
@@ -44,7 +51,7 @@ export async function GET() {
   const session = await getServerSession(authOptions);
 
   if (!session || !session.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
 
   const isAdmin = await prisma.Users.findFirst({
@@ -52,11 +59,17 @@ export async function GET() {
   });
 
   if (!isAdmin) {
-    return NextResponse.json({ error: "Permission denied" }, { status: 403 });
+    return NextResponse.json({ error: "没有权限" }, { status: 403 });
   }
 
   try {
-    const users = await prisma.Users.findMany();
+    const users = await prisma.Users.findMany({
+      select: {
+        id: true,
+        uname: true,
+        role: true,
+      },
+    });
     return NextResponse.json(users);
   } catch (error) {
     return NextResponse.json(

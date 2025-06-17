@@ -3,8 +3,8 @@ import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 
 export const metadata = {
-  title: "User Management System",
-  description: "Manage users, sessions and permissions",
+  title: "用户管理",
+  description: "用户管理",
 };
 
 export default function RootLayout({

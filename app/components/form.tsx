@@ -1,43 +1,83 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createHash } from "crypto";
 
-export default function ContactForm() {
+export default function ContactForm({ data, onUpdate }) {
+  const formRef = useRef(null);
   const [formData, setFormData] = useState({
+    id: null,
     uname: "",
     password: "",
-    isAdmin: "",
+    role: false,
   });
+
+  useEffect(() => {
+    data.role = data.role == "1" ? true : false;
+    setFormData(data);
+  }, [data]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
+  };
+  const reset = (e = null) => {
+    e && e.preventDefault();
+    setFormData({
+      id: null,
+      uname: "",
+      password: "",
+      role: false,
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!formData.uname) return;
+    formData.role = formData.role ? "1" : "0";
 
-    fetch("/api/users", {
-      body: JSON.stringify(formData),
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json", // 设置请求头，指定发送的数据格式
-      },
-    });
+    if (formData.password) {
+      formData.password = createHash("md5")
+        .update(formData.password)
+        .digest("hex");
+    }
+
+    if (!formData.id) {
+      if (!formData.password) return;
+      fetch("/api/users", {
+        body: JSON.stringify(formData),
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }).then(() => {
+        reset();
+      });
+    } else {
+      fetch("/api/users/" + formData.id, {
+        body: JSON.stringify(formData),
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }).then(() => {
+        reset();
+        onUpdate();
+      });
+    }
   };
 
   return (
     <form
       className="flex justify-between items-center border-[1px] border-[#ccc] border-solid rounded-sm h-10 p-2"
       onSubmit={handleSubmit}
+      ref={formRef}
     >
       <div>
-        <label htmlFor="uname" className="mr-1">
-          账号:
-        </label>
+        <label className="mr-1">账号:</label>
         <input
           type="text"
           name="uname"
@@ -46,9 +86,7 @@ export default function ContactForm() {
         />
       </div>
       <div>
-        <label htmlFor="password" className="mr-1">
-          密码:
-        </label>
+        <label className="mr-1">密码:</label>
         <input
           type="password"
           name="password"
@@ -57,17 +95,20 @@ export default function ContactForm() {
         />
       </div>
       <div>
-        <label htmlFor="role" className="mr-1">
-          管理员:
-        </label>
+        <label className="mr-1">管理员:</label>
         <input
           type="checkbox"
           name="role"
-          value={formData.isAdmin}
+          checked={formData.role}
           onChange={handleChange}
         />
       </div>
-      <button type="submit">提交</button>
+      <div>
+        <button className="mr-1" type="button" onClick={reset}>
+          重置
+        </button>
+        <button type="submit">提交</button>
+      </div>
     </form>
   );
 }
