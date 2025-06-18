@@ -4,7 +4,6 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { createHash } from "crypto";
-
 const prisma = new PrismaClient();
 
 export const authOptions = {
@@ -28,7 +27,6 @@ export const authOptions = {
           .update(credentials?.password)
           .digest("hex");
         const isPasswordValid = await bcrypt.compare(password, user.password);
-
         if (!isPasswordValid) {
           return null; // 密码错误
         }
@@ -41,15 +39,21 @@ export const authOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.id = user.id;
+      if (user) {
+        token.id = user.id;
+        token.uname = user.uname;
+      }
       return token;
     },
     async session({ session, token }) {
-      if (session.user) session.user.id = token.id as string;
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.uname = token.uname as string;
+      }
       return session;
     },
     async redirect({ url, baseUrl }) {
-      return "/";
+      return url + "?token=xxx";
     },
   },
   session: {
